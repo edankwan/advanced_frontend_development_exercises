@@ -24,24 +24,6 @@
           background: transparent;
         }
 
-        .preloader {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            z-index: 2048;
-        }
-
-        .preloader-percent {
-            position: absolute;
-            width: 100%;
-            top: 50%;
-            margin-top: -20px;
-            font-size: 32px;
-            line-height: 40px;
-            text-align: center;
-
-        }
         .info {
             position: absolute;
             left: 0;
@@ -93,18 +75,7 @@
     <script>
 
         var config = {
-            percent: 0,
-            skipPreloaderAnimation: true,
-            animation: 0,
-            wave: 0.2,
-            shake: 0.2,
-            screenEffect: 0.4,
-            shoot: function() {
-                TweenMax.fromTo(config, 0.5, {animation: 0}, {animation: 1});
-                resources.shot.currentTime = 0.1;
-                resources.shot.play();
-            },
-            hoverAnimation: 0
+            animation: 0
         };
 
         var windowWidth;
@@ -112,8 +83,6 @@
 
         var stats;
         var resources;
-        var preloader;
-        var preloadPercent;
 
         var renderer;
         var stage;
@@ -124,7 +93,6 @@
         var gui;
 
         var isPreloaded = false;
-        var isControlVisible = false;
 
         function init() {
 
@@ -143,18 +111,6 @@
 
             loop();
 
-        }
-
-        function _onOver(evt) {
-            TweenMax.to(config, 0.5, {hoverAnimation: 1});
-        }
-
-        function _onOut(evt) {
-            TweenMax.to(config, 0.5, {hoverAnimation: 0});
-        }
-
-        function _onClick(evt) {
-            config.shoot();
         }
 
         function onResize() {
