@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Parallax Effect</title>
+    <meta name="viewport" content="initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+    <link href='http://fonts.googleapis.com/css?family=Lato:700' rel='stylesheet' type='text/css'>
+    <style>
+        html, body {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            margin: 0 0;
+            overflow: hidden;
+            font-family: 'Lato', sans-serif;
+            background-color: #181818;
+        }
+        .bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: url(images/parallax_bg.jpg);
+            background-size: cover;
+            background-position: 50% 50%;
+        }
+        .circle {
+            position: absolute;
+            left: 70%;
+            top: 20%;
+            width: 110px;
+            height: 110px;
+            margin-left: -55px;
+            margin-top: -55px;
+            border-radius: 50% 50%;
+            background-color: #f96e6e;
+        }
+        .box {
+            position: absolute;
+            left: 20%;
+            top: 30%;
+            width: 108px;
+            height: 108px;
+            margin-left: -54px;
+            margin-top: -54px;
+            background-color: #f9ee6e;
+        }
+        .triangle {
+            position: absolute;
+            left: 80%;
+            top: 70%;
+            width: 0;
+            height: 0;
+            margin-left: -79px;
+            margin-top: -68px;
+            border-style: solid;
+            border-width: 0 79px 136px 79px;
+            border-color: transparent transparent #6ef4f9 transparent;
+        }
+        .logo {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 240px;
+            height: 240px;
+            margin-left: -120px;
+            margin-top: -120px;
+            background-image: url(images/parallax_logo.png);
+        }
+        .overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 16px solid #fff;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="center">
+    <div class="circle" data-x="-0.2" data-y="0.3"></div>
+    <div class="box" data-x="0.3" data-y="0.2"></div>
+    <div class="triangle" data-x="-0.3" data-y="-0.2"></div>
+    <div class="logo"></div>
+</div>
+<div class="overlay"></div>
+
+<script src="js/speakUtils.js"></script>
+<script src="js/easeUtils.js"></script>
+<script src="js/TweenMax.js"></script>
+<script>
+var app = (function(exports, undef){
+
+    var _tweenObj = {
+        clickAnimation: 0
+    };
+
+    var container = document.getElementById('app');
+
+    var canvas = exports.canvas = undef;
+    var _ctx;
+
+    var _winWidth;
+    var _winHeight;
+
+    var _bgStyle = document.querySelector('.bg').style;
+    var _logo = document.querySelector('.logo');
+    var _logoStyle = _logo.style;
+    var _circle = document.querySelector('.circle');
+    var _circleStyle = _circle.style;
+    var _box = document.querySelector('.box');
+    var _boxStyle = _box.style;
+    var _triangle = document.querySelector('.triangle');
+    var _triangleStyle = _triangle.style;
+
+    var _aspect = 1;
+    var _time = 0;
+
+    function init() {
+
+        window.addEventListener('resize', onResize);
+        window.addEventListener('mousemove', _onMove);
+        onResize();
+        _animate();
+
+    }
+
+    function onResize() {
+        _winWidth = window.innerWidth;
+        _winHeight = window.innerHeight;
+        _aspect = _winWidth / _winHeight;
+    }
+
+    function _onMove(evt) {
+        var mouseX = (evt.pageX / _winWidth - 0.5) * 2;
+        var mouseY = (evt.pageY / _winHeight - 0.5) * 2;
+
+        var offsetX = mouseX * 20 * _aspect;
+        var offsetY = mouseY * 20;
+        _bgStyle.transform = 'translate3d(' + offsetX + 'px,' + offsetY + 'px,0)';
+    }
+
+    function _animate() {
+        window.requestAnimationFrame(_animate);
+        render();
+    }
+
+    function render() {
+
+    }
+
+    exports.init = init;
+    exports.onResize = onResize;
+    exports.render = render;
+
+    return exports;
+
+}({}));
+
+app.init();
+</script>
+</body>
+</html>

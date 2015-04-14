@@ -1,0 +1,10 @@
+{
+    "name": "demos",
+    "version": "1.0.0",
+    "description": "",
+    "private" : true,
+    "devDependencies" : {
+        "node-watch" : "~0.3.4",
+        "tiny-lr" : "0.0.7"
+    }
+}

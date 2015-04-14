@@ -1,0 +1,194 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Gun shoot effect</title>
+    <meta name="viewport" content="initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <link href='http://fonts.googleapis.com/css?family=Lato:700|Oswald:400' rel='stylesheet' type='text/css'>
+    <style>
+        html, body {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            margin: 0 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Oswald', sans-serif;
+            color: #fff;
+        }
+        ::selection {
+          background: transparent;
+        }
+        ::-moz-selection {
+          background: transparent;
+        }
+
+        .preloader {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 2048;
+        }
+
+        .preloader-percent {
+            position: absolute;
+            width: 100%;
+            top: 50%;
+            margin-top: -20px;
+            font-size: 32px;
+            line-height: 40px;
+            text-align: center;
+
+        }
+        .info {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            padding: 10px 10px;
+            box-sizing: border-box;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-size: 12px;
+        }
+        .info-desc {
+            color: #ddd;
+            font-size: 10px;
+        }
+        a {
+            color: #ff5f5f;
+        }
+
+    </style>
+</head>
+
+<body>
+    <script src="js/dat.gui.js"></script>
+    <script src="js/Stats.js"></script>
+    <script src="js/speakUtils.js"></script>
+    <script src="js/pixi.js"></script>
+    <script src="js/TweenMax.js"></script>
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
+
+        varying vec2 vTextureCoord;
+        uniform sampler2D uSampler;
+
+        #define PI 3.1415926535
+
+        float rand(vec2 co){
+            return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+        }
+
+        void main(void) {
+
+            gl_FragColor = texture2D(uSampler, vTextureCoord);
+
+        }
+    </script>
+
+    <script>
+
+        var config = {
+            percent: 0,
+            skipPreloaderAnimation: true,
+            animation: 0,
+            wave: 0.2,
+            shake: 0.2,
+            screenEffect: 0.4,
+            shoot: function() {
+                TweenMax.fromTo(config, 0.5, {animation: 0}, {animation: 1});
+                resources.shot.currentTime = 0.1;
+                resources.shot.play();
+            },
+            hoverAnimation: 0
+        };
+
+        var windowWidth;
+        var windowHeight;
+
+        var stats;
+        var resources;
+        var preloader;
+        var preloadPercent;
+
+        var renderer;
+        var stage;
+
+        var sprite;
+        var uniforms;
+
+        var gui;
+
+        var isPreloaded = false;
+        var isControlVisible = false;
+
+        function init() {
+
+            gui = new dat.GUI();
+
+            renderer = new PIXI.WebGLRenderer(1, 1);
+            stage = stage = new PIXI.Container();
+            document.body.appendChild(renderer.view);
+
+            sprite = new PIXI.Sprite(new PIXI.Texture(new PIXI.BaseTexture(resources.base)));
+
+            stage.addChild(sprite);
+
+            window.onresize = onResize;
+            onResize();
+
+            loop();
+
+        }
+
+        function _onOver(evt) {
+            TweenMax.to(config, 0.5, {hoverAnimation: 1});
+        }
+
+        function _onOut(evt) {
+            TweenMax.to(config, 0.5, {hoverAnimation: 0});
+        }
+
+        function _onClick(evt) {
+            config.shoot();
+        }
+
+        function onResize() {
+            windowWidth = window.innerWidth;
+            windowHeight = window.innerHeight;
+            renderer.resize(windowWidth, windowHeight);
+
+            render();
+        }
+
+        function loop() {
+            requestAnimationFrame(loop);
+            render();
+        }
+
+        function render() {
+            renderer.render(stage);
+        }
+
+        function preload() {
+            speakUtils.preload([
+                {id: 'base', url: 'images/gun_base.jpg', type: 'image'},
+                {id: 'overlay', url: 'images/gun_overlay.jpg', type: 'image'}
+            ], function(percent, items) {
+                resources = resources || items.contents;
+                if(percent == 1 && !isPreloaded) {
+                    isPreloaded = true;
+                    init();
+                }
+            });
+        }
+
+        preload();
+
+    </script>
+</body>
+</html>

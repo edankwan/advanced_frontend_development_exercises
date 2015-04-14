@@ -1,0 +1,233 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ThreeJS Particles</title>
+    <meta name="viewport" content="initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <link href='http://fonts.googleapis.com/css?family=Oswald:400' rel='stylesheet' type='text/css'>
+    <script src="//ajax.googleapis.com/ajax/libs/webfont/1.5.10/webfont.js"></script>
+    <style>
+        html, body {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            margin: 0 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Oswald', sans-serif;
+            color: #fff;
+        }
+        .info {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            padding: 10px 10px;
+            box-sizing: border-box;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-size: 12px;
+        }
+        .info-desc {
+            color: #ddd;
+            font-size: 10px;
+        }
+        a {
+            color: #ff5f5f;
+        }
+    </style>
+</head>
+
+<body>
+
+<script src="js/dat.gui.js"></script>
+<script src="js/three.js"></script>
+<script src="js/TweenMax.js"></script>
+
+<script id="shader-vs" type="x-shader/x-vertex">
+
+    // uniform mat4 modelViewMatrix;
+    // uniform mat4 projectionMatrix;
+    // attribute vec3 position;
+
+    attribute vec2 extras;
+
+    void main() {
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        gl_PointSize = 1.0;
+
+    }
+
+
+</script>
+
+<script id="shader-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    void main() {
+        gl_FragColor = vec4(1.0);
+
+    }
+</script>
+
+<script>
+
+    var config = {
+        str: 'Edan Kwan',
+        fontSize: 120,
+        lineHeight: 1.4,
+        baseLine: 0.7,
+
+        play: function() {
+            TweenMax.fromTo(material.uniforms.uAnimation, 2, {value: 0}, {value: 1});
+        },
+        onStrChange: updateText
+    };
+
+    var prevStr = config.str;
+
+    var windowWidth;
+    var windowHeight;
+
+    var stats;
+
+    var renderer;
+    var scene;
+    var camera;
+
+    var geometry;
+    var material;
+    var mesh;
+
+    var fixedScale = 1;
+
+    var canvas;
+    var ctx;
+    var width;
+    var height;
+
+    var gui;
+
+    var PARTICLES_AMOUNT = 300000;
+
+    function init() {
+
+        canvas = document.createElement('canvas');
+        ctx = canvas.getContext('2d');
+        // document.body.appendChild(canvas);
+
+        camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 3000);
+        camera.position.z = 1000;
+        scene = new THREE.Scene();
+        renderer = new THREE.WebGLRenderer();
+        renderer.setClearColor( 0x101010 );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        document.body.appendChild(renderer.domElement);
+
+        geometry = new THREE.BufferGeometry();
+        geometry.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array(PARTICLES_AMOUNT * 3), 3 ));
+        geometry.addAttribute( 'extras', new THREE.BufferAttribute( new Float32Array(PARTICLES_AMOUNT * 2), 2 ) );
+
+        material = new THREE.ShaderMaterial( {
+
+            uniforms: {
+                uTime: { type: 'f', value: 0 },
+                uAnimation: { type: 'f', value: 0 },
+                uOffset: { type: 'v2', value: new THREE.Vector2() }
+            },
+            attributes: geometry.attributes,
+            vertexShader: document.getElementById( 'shader-vs' ).textContent,
+            fragmentShader: document.getElementById( 'shader-fs' ).textContent,
+            blending: THREE.AdditiveBlending,
+            transparent: true,
+            depthWrite: true,
+            depthTest: false
+        } );
+
+        mesh = new THREE.PointCloud( geometry, material );
+        scene.add( mesh );
+
+        gui = new dat.GUI();
+        gui.add(config, 'play');
+        gui.add(config, 'str').onChange(config.onStrChange);
+        gui.add(material.uniforms.uAnimation, 'value', 0, 1).name('animation').listen();
+
+        updateText();
+
+        window.onresize = onResize;
+        onResize();
+
+        loop();
+
+        config.play();
+    }
+
+    function updateText () {
+        var str = config.str;
+
+        ctx.font = config.fontSize + 'px Oswald';
+        var metrics = ctx.measureText(str);
+        width = canvas.width = Math.ceil(metrics.width) || 1;
+        height = canvas.height = Math.ceil(config.lineHeight * config.fontSize);
+        ctx.font = config.fontSize + 'px Oswald';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(str, 0, config.lineHeight * config.fontSize *config.baseLine);
+
+        vertices = geometry.attributes.position.array;
+        extras = geometry.attributes.extras.array;
+        var index;
+        var data = ctx.getImageData(0, 0, width, height).data;
+        var count = 0;
+        for(var i = 0, len = data.length; i < len; i+=4) {
+            if(data[i + 3] > 0) {
+                index = i / 4;
+                vertices[count * 3] = index % width;
+                vertices[count * 3 + 1] = index / width | 0;
+                extras[count * 2] = data[i + 3] / 255;
+                extras[count * 2 + 1] = Math.random();
+                count++;
+            }
+        }
+
+        geometry.attributes.position.needsUpdate = true;
+        geometry.attributes.extras.needsUpdate = true;
+        geometry.drawcalls = geometry.offsets = [{start: 0, count: count, index: 0}];
+    }
+
+    function onResize() {
+        windowWidth = window.innerWidth;
+        windowHeight = window.innerHeight;
+
+        camera.aspect = windowWidth / windowHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(windowWidth, windowHeight);
+
+        fixedScale = 2 * Math.tan(camera.fov / 360 * Math.PI) / windowHeight;
+
+        render();
+    }
+
+    function loop() {
+        requestAnimationFrame(loop);
+        render();
+    }
+
+    function render() {
+
+        mesh.position.copy(camera.position);
+        mesh.rotation.copy(camera.rotation);
+        mesh.translateZ(-1 / fixedScale );
+
+        material.uniforms.uTime.value += 0.003;
+        material.uniforms.uOffset.value.set(-width / 2, -height / 2);
+        renderer.render( scene, camera );
+
+    }
+
+    WebFont.load({google: {families: ['Oswald']}, active: init});
+
+</script>
+</body>
+</html>
