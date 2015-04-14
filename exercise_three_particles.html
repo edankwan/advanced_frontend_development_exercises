@@ -107,6 +107,8 @@
     var material;
     var mesh;
 
+    var fixedScale = 1;
+
     var canvas;
     var ctx;
     var width;
@@ -208,6 +210,8 @@
         camera.updateProjectionMatrix();
         renderer.setSize(windowWidth, windowHeight);
 
+        fixedScale = 2 * Math.tan(camera.fov / 360 * Math.PI) / windowHeight;
+
         render();
     }
 
@@ -217,6 +221,10 @@
     }
 
     function render() {
+
+        mesh.position.copy(camera.position);
+        mesh.rotation.copy(camera.rotation);
+        mesh.translateZ(-1 / fixedScale );
 
         material.uniforms.uTime.value += 0.003;
         material.uniforms.uOffset.value.set(-width / 2, -height / 2);
