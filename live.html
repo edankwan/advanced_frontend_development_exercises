@@ -1,0 +1,489 @@
+<html>
+    <head>
+        <title>Live</title>
+        <link href='http://fonts.googleapis.com/css?family=Lato:300' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="css/tomorrow-night.css">
+        <link rel="stylesheet" href="css/center.css">
+        <style>
+            html {
+                width: 100%;
+                height: 100%;
+                font-family: 'Lato', sans-serif;
+            }
+            body {
+                margin: 0 0;
+                position: relative;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                background-color: #fff;
+            }
+            #main {
+                position: absolute;
+                top: 0;
+                bottom: 110px;
+                width: 100%;
+                margin: 0 0;
+                overflow: scroll;
+                background-color: #1d1f21;
+                overflow-x: auto;
+            }
+            code, .hljs {
+                display: inline-block;
+                min-width: 100%;
+                font-size: 22px;
+                outline: none;
+                overflow-wrap: normal;
+                white-space: pre;
+                padding: 0 0;
+            }
+            code > div {
+                width: 100%;
+            }
+            code > div div {
+                line-height: 30px;
+                padding: 0 0 0 25px;
+            }
+            code.hljs span.css,
+            code.hljs span.javascript {
+                opacity: 1;
+            }
+
+            code *::selection {
+              background-color: #ff7979;
+              color: #fff;
+            }
+            code *::-moz-selection {
+              background-color: #ff7979;
+              color: #fff;
+            }
+            .code-highlighter {
+                position: absolute;
+                left: 0;
+                top: 0;
+                margin-top: -1px;
+                width: 100%;
+                height: 30px;
+                border-top: 1px solid #666;
+                border-bottom: 1px solid #666;
+                pointer-events: none;
+            }
+            .code-highlighter:before {
+                position: absolute;
+                content: '';
+                top: 10px;
+                left: 10px;
+                width: 10px;
+                height: 10px;
+                border-radius: 50% 50%;
+                background-color: #fff;
+            }
+
+            .is-added {
+                background: #000;
+            }
+            .is-removed {
+                width: 100%;
+                height: 1px;
+                background-color: #840c0c;
+            }
+
+            #bottom {
+                position: absolute;
+                width: 100%;
+                height: 110px;
+                bottom: 0;
+                background-color: #fff;
+            }
+            .bottom-timeline {
+                position: absolute;
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                height: 5px;
+                background-color: #ccc;
+            }
+            .bottom-timeline-current {
+                width: 0%;
+                height: 5px;
+                background-color: #ff8d8d;
+            }
+
+            .bottom-preview {
+                width: 105px;
+                height: 100%;
+                cursor: pointer;
+            }
+            .bottom-preview:hover {
+                background-color: #f7f7f7;
+            }
+            .bottom-preview svg {
+                position: relative;
+                left: 38px;
+                top: 38px;
+                vertical-align: top;
+            }
+            .bottom-desc {
+                position: absolute;
+                top: 0;
+                left: 125px;
+                right: 200px;
+                height: 100%;
+                font-size: 24px;
+                vertical-align: middle;
+            }
+            .bottom-control {
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 180px;
+                height: 100%;
+            }
+            .bottom-control-page {
+                position: absolute;
+                top: 50%;
+                margin-top: -14px;
+                width: 0;
+                height: 0;
+                border-style: solid;
+                border-width: 14px 0 14px 0;
+                border-color: transparent;
+                opacity: 0.2;
+                cursor: pointer;
+            }
+            .bottom-control-page.is-left {
+                left: 20px;
+                border-right-width: 15px;
+                border-right-color: #007bff;
+            }
+            .bottom-control-page.is-right {
+                right: 20px;
+                border-left-width: 15px;
+                border-left-color: #007bff;
+            }
+            .bottom-control-section {
+                position: absolute;
+                left: 50%;
+                margin-left: -14px;
+                width: 0;
+                height: 0;
+                border-style: solid;
+                border-width: 0 14px 0 14px;
+                border-color: transparent transparent transparent transparent;
+                opacity: 0.2;
+                cursor: pointer;
+            }
+            .bottom-control-section.is-up {
+                top: 20px;
+                border-bottom-width: 15px;
+                border-bottom-color: #007bff;
+            }
+            .bottom-control-section.is-down {
+                bottom: 20px;
+                border-top-width: 15px;
+                border-top-color: #007bff;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div id="main"><code></code></div>
+        <div id="bottom">
+            <div class="bottom-preview"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32" viewBox="0 0 32 32"><path fill="#444444" d="M16 6c-6.979 0-13.028 4.064-16 10 2.972 5.936 9.021 10 16 10s13.027-4.064 16-10c-2.972-5.936-9.021-10-16-10zM23.889 11.303c1.88 1.199 3.473 2.805 4.67 4.697-1.197 1.891-2.79 3.498-4.67 4.697-2.362 1.507-5.090 2.303-7.889 2.303s-5.527-0.796-7.889-2.303c-1.88-1.199-3.473-2.805-4.67-4.697 1.197-1.891 2.79-3.498 4.67-4.697 0.122-0.078 0.246-0.154 0.371-0.228-0.311 0.854-0.482 1.776-0.482 2.737 0 4.418 3.582 8 8 8s8-3.582 8-8c0-0.962-0.17-1.883-0.482-2.737 0.124 0.074 0.248 0.15 0.371 0.228v0zM16 13c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z"></path></svg></div>
+            <div class="bottom-desc bss-vcenter"><div class="bss-outer"><div class="bss-inner"></div></div> </div>
+            <div class="bottom-control">
+                <div class="bottom-control-page is-left"></div>
+                <div class="bottom-control-page is-right"></div>
+                <div class="bottom-control-section is-up"></div>
+                <div class="bottom-control-section is-down"></div>
+            </div>
+            <div class="bottom-timeline"><div class="bottom-timeline-current"></div></div>
+        </div>
+
+        <script src="js/signals.js"></script>
+        <script src="js/hasher.js"></script>
+        <script src="js/speakUtils.js"></script>
+        <script src="js/highlight.js"></script>
+        <script src="js/diff.js"></script>
+        <script src="js/TweenMax.js"></script>
+
+        <script>
+
+            var LINE_HEIGHT = 30;
+
+            var undef;
+
+            var projectId = window.location.href.split('?project=')[1].split('#')[0];
+
+            var updatePreviewCheckTime = 0;
+            var updatePreviewTimeout;
+
+            var preview;
+            var resources;
+            var pages;
+            var sections = [];
+
+            var currentPageIndex = -1;
+            var currentSectionIndex = -1;
+            var isAutoScroll = false;
+
+            var descInner = document.querySelector('.bottom-desc .bss-inner');
+
+            var bottom = document.getElementById('bottom');
+            var main = document.getElementById('main');
+            var leftBtn = document.querySelector('.is-left');
+            var rightBtn = document.querySelector('.is-right');
+            var upBtn = document.querySelector('.is-up');
+            var downBtn = document.querySelector('.is-down');
+            var codeHighlighter = document.createElement('div');
+
+            var currentCode;
+            var lastTime = Date.now();
+            var lastText;
+            var isFirstTime = true;
+            var mouseY = 0;
+
+            function init() {
+
+                hljs.configure({useBR: true});
+                currentCode = main.querySelector('code');
+
+                window.addEventListener('beforeunload', closePreview);
+                document.addEventListener('keydown', onBottomKeyUp);
+                leftBtn.addEventListener('click', bindArrowBtn(navPage, -1));
+                rightBtn.addEventListener('click', bindArrowBtn(navPage, 1));
+                upBtn.addEventListener('click', bindArrowBtn(navSection, -1));
+                downBtn.addEventListener('click', bindArrowBtn(navSection, 1));
+                document.querySelector('.bottom-preview').addEventListener('click', openPreview);
+
+                codeHighlighter.className = 'code-highlighter';
+
+                main.addEventListener('mousemove', onMainMouseMove);
+
+                hasher.changed.add(onHashChange);
+                hasher.initialized.add(function(newHash){
+                    onHashChange(newHash);
+                    openPreview();
+                    loop();
+                });
+                hasher.init();
+            }
+
+            function onMainMouseMove(evt) {
+                mouseY = evt.clientY;
+            }
+
+            function onHashChange(newHash) {
+                if(!newHash) {
+                    window.location.href = '#0/0';
+                    return;
+                }
+                var nodes = newHash.split('/');
+                var pageIndex = parseInt(nodes[0]) || 0;
+                var sectionIndex = parseInt(nodes[1]) || 0;
+
+                var usePrevious = isFirstTime && (pageIndex > 0);
+                var tmpSectionIndex;
+                if(usePrevious) {
+                    pageIndex -= 1;
+                    tmpSectionIndex = sectionIndex;
+                    sectionIndex = 0;
+                }
+                changePage(pageIndex, isFirstTime);
+                changeSection(sectionIndex);
+                if(usePrevious) {
+                    isFirstTime = false;
+                    onHashChange((pageIndex + 1) + '/' + tmpSectionIndex);
+                }
+                isFirstTime = false;
+            }
+
+            function bindArrowBtn(func, direction) {
+                return function(evt) {
+                    func.call(this, direction);
+                };
+            }
+
+            function onBottomKeyUp(evt) {
+                if(evt.target.tagName !== 'CODE') {
+                    if (evt.keyCode == '38') {
+                        navSection(-1);
+                    } else if (evt.keyCode == '40') {
+                        navSection(1);
+                    } else if (evt.keyCode == '37') {
+                        navPage(-1);
+                    } else if (evt.keyCode == '39') {
+                        navPage(1);
+                    }
+                }
+            }
+
+            function clamp(val, min, max) {
+                return val < min ? min : val > max ? max : val;
+            }
+
+            function closePreview() {
+                if(preview && !preview.closed) {
+                    preview.close();
+                    preview = null;
+                }
+            }
+
+            function navPage(direction) {
+                var index = clamp(currentPageIndex + direction, 0, pages.length - 1);
+                if(index !== currentPageIndex) {
+                    window.location.href = '#' + index + '/0';
+                }
+            }
+
+            function navSection(direction) {
+                var index = clamp(currentSectionIndex + direction, 0, sections.length - 1);
+                if(index !== currentSectionIndex) {
+                    window.location.href = '#' + currentPageIndex + '/' + index;
+                }
+            }
+
+            function changeSection(index) {
+                index = clamp(index, 0, sections.length - 1);
+                if(index === currentSectionIndex) return;
+                currentSectionIndex = index;
+                if(sections.length) {
+                    upBtn.style.opacity = index > 0 ? 1 : 0.2;
+                    downBtn.style.opacity = index < sections.length - 1 ? 1 : 0.2;
+
+                    var section = sections[index];
+                    var top = section.offsetTop - 100;
+                    isAutoScroll = true;
+                    var duration = Math.min(Math.abs(main.scrollTop - top) * 0.0005, 1);
+                    TweenMax.to(main, duration, {scrollTop: top, ease: 'easeInOutCubic'});
+                    section.style.outline = '2px solid #fff';
+                    TweenMax.to(section, Math.min(duration * 2, 1.5), {outlineColor: 'rgba(255,255,255,0)', ease: 'linear'});
+                }
+            }
+
+            function htmlEscape(str, classname) {
+                return '<div ' + (classname ? 'class="' + classname + '"' : '') + '><div>' + str
+                        .replace(/&/g, '&amp;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/\n/g, '<br/>') + '</div></div>';
+            }
+
+            function changePage(index, skipDiff) {
+                index = clamp(index, 0, pages.length - 1);
+                if(index === currentPageIndex) return;
+                currentPageIndex = index;
+                var html;
+                if(!skipDiff) {
+                    var diff = JsDiff.diffLines(currentCode.innerText, resources[index]);
+                    html = '';
+                    diff.forEach(function(part) {
+                        if(part.added) {
+                            if(part.value.replace(/\s/g,'').length) {
+                                html += htmlEscape(part.value, 'is-added');
+                            } else {
+                                html += htmlEscape(part.value);
+                            }
+                        } else if(part.removed) {
+                            // html += '<div class="is-removed"></div>';
+                        } else {
+                            html += htmlEscape(part.value);
+                        }
+                    });
+                } else {
+                    html = htmlEscape(resources[index]);
+                }
+
+                leftBtn.style.opacity = index > 0 ? 1 : 0.2;
+                rightBtn.style.opacity = index < pages.length - 1 ? 1 : 0.2;
+
+                if(codeHighlighter.parentNode) codeHighlighter.parentNode.removeChild(codeHighlighter);
+                main.innerHTML = '<code contenteditable>' + html + '</code>';
+                descInner.innerHTML = pages[index];
+                currentCode = main.querySelector('code');
+                hljs.highlightBlock(currentCode);
+                main.appendChild(codeHighlighter);
+
+                currentSectionIndex = -1;
+                sections = main.querySelectorAll('.is-added,.is-removed');
+            }
+
+            function loop () {
+                requestAnimationFrame(loop);
+                var dt = Date.now() - lastTime;
+                lastTime = lastTime + dt;
+                render(dt);
+            }
+
+            function render (dt) {
+                if((updatePreviewCheckTime -= dt) < 0) {
+                    updatePreviewCheckTime = 500;
+                    var text = currentCode.innerText;
+                    if(lastText !== text) {
+                        updatePreview(lastText = text);
+                    }
+                }
+
+                var scrollTop = main.scrollTop;
+                var y = ~~((mouseY + scrollTop) / LINE_HEIGHT) * LINE_HEIGHT;
+                codeHighlighter.style.transform = 'translate3d(0,' + y +'px,0)';
+            }
+
+            function openPreview() {
+                var width = screen.width;
+                var height = screen.height;
+                closePreview();
+                preview = window.open('about:blank', '_blank', 'width=' + (width / 2) + ',height=' + (height) + ',left=' + (width / 2) + ',top=0');
+                lastText = undef;
+            }
+
+            function updatePreview(text) {
+                if(!preview && preview.closed) {
+                    openPreview();
+                } else {
+                    preview.location.href='about:blank';
+                }
+                clearTimeout(updatePreviewTimeout);
+                updatePreviewTimeout = setTimeout(function(){
+                    preview.document.open();
+                    preview.document.write(text || currentCode.innerText);
+                    preview.document.close();
+                }, 16);
+            }
+
+            function liveEdit(data) {
+
+                document.title = data.title;
+                pages = data.pages;
+                var loadItems = [];
+                for(var i = 0, len = pages.length; i < len; i++) {
+                    loadItems.push({
+                        id: i,
+                        url: projectId + '/' + i + '.html',
+                        type: 'text'
+                    });
+                }
+                speakUtils.preload(loadItems, function(percent, item) {
+                    resources = resources || item.contents;
+                    if(percent === 1) init();
+                }, true);
+            }
+
+            function loadData() {
+                if(projectId) {
+                    (function(d, s) {
+                        var js = d.createElement('script');
+                        var head = d.getElementsByTagName('head')[0];
+                        js.src = projectId + '/data.js';
+                        head.insertBefore(js, head.firstChild);
+                    }(document, 'script'));
+                }
+            }
+
+            loadData();
+
+        </script>
+    </body>
+</html>

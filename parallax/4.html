@@ -93,6 +93,11 @@
 <script>
 var app = (function(exports, undef){
 
+    // create a tween object
+    var _tweenObj = {
+        hoverAnimation: 0
+    };
+
     var container = document.getElementById('app');
 
     var canvas = exports.canvas = undef;
@@ -114,13 +119,34 @@ var app = (function(exports, undef){
     var _aspect = 1;
     var _time = 0;
 
+    var _targetMouseX = 0;
+    var _targetMouseY = 0;
+
+    // store the mouseXY values out of the mouse event scope
+    var _mouseX = 0;
+    var _mouseY = 0;
+
     function init() {
+
+        // add mouse events on the logo
+        _logo.addEventListener('mouseover', _onLogoOver);
+        _logo.addEventListener('mouseout', _onLogoOut);
 
         window.addEventListener('resize', onResize);
         window.addEventListener('mousemove', _onMove);
         onResize();
         _animate();
 
+    }
+
+    // tween the hoverAnimation value in the _tweenObj
+    function _onLogoOver() {
+        TweenMax.to(_tweenObj, 1, {hoverAnimation: 1});
+    }
+
+    // tween the hoverAnimation value in the _tweenObj
+    function _onLogoOut() {
+        TweenMax.to(_tweenObj, 1, {hoverAnimation: 0});
     }
 
     function onResize() {
@@ -130,12 +156,10 @@ var app = (function(exports, undef){
     }
 
     function _onMove(evt) {
-        var mouseX = (evt.pageX / _winWidth - 0.5) * 2;
-        var mouseY = (evt.pageY / _winHeight - 0.5) * 2;
 
-        var offsetX = mouseX * 20 * _aspect;
-        var offsetY = mouseY * 20;
-        _bgStyle.transform = 'translate3d(' + offsetX + 'px,' + offsetY + 'px,0)';
+        _targetMouseX = (evt.pageX / _winWidth - 0.5) * 2;
+        _targetMouseY = (evt.pageY / _winHeight - 0.5) * 2;
+
     }
 
     function _animate() {
@@ -145,6 +169,43 @@ var app = (function(exports, undef){
 
     function render() {
 
+        // currentValue = lerp(newValue, currentValue, ratio);
+        // currentValue = currentValue + (newValue - currentValue) * ratio;
+        // currentValue += (newValue - currentValue) * ratio
+        _mouseX += (_targetMouseX - _mouseX) * 0.05;
+        _mouseY += (_targetMouseY - _mouseY) * 0.05;
+
+        // use different offset distances to
+        // create a depth illustion.
+
+        _bgStyle.transform = _getParallaxStyle(5);
+
+        _logoStyle.transform = _getParallaxStyle(-10);
+
+        // apply the drop effect
+        var hoverAnimation = _tweenObj.hoverAnimation;
+        var dropRatio = hoverAnimation;
+
+        _circleStyle.transform = _getParallaxStyle(-15) + _getDropStyle(dropRatio);
+
+        _boxStyle.transform = _getParallaxStyle(-20) + _getDropStyle(dropRatio);
+
+        _triangleStyle.transform = _getParallaxStyle(-25) + _getDropStyle(dropRatio);
+
+    }
+
+    // abstracting the parallax style update
+    function _getParallaxStyle(offset) {
+        var offsetX = _mouseX * offset * _aspect;
+        var offsetY = _mouseY * offset;
+        return 'translate3d(' + offsetX + 'px,' + offsetY + 'px,0)';
+    }
+
+    // abstracting the drop style update
+    function _getDropStyle(ratio) {
+        // use easeInQuint easing function
+        var offset = _winHeight * easeUtils.easeInQuint(ratio);
+        return 'translateY(' + offset + 'px)';
     }
 
     exports.init = init;

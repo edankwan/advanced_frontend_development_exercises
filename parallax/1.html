@@ -114,6 +114,10 @@ var app = (function(exports, undef){
     var _aspect = 1;
     var _time = 0;
 
+    // store the mouseXY values out of the mouse event scope
+    var _mouseX = 0;
+    var _mouseY = 0;
+
     function init() {
 
         window.addEventListener('resize', onResize);
@@ -130,12 +134,10 @@ var app = (function(exports, undef){
     }
 
     function _onMove(evt) {
-        var mouseX = (evt.pageX / _winWidth - 0.5) * 2;
-        var mouseY = (evt.pageY / _winHeight - 0.5) * 2;
 
-        var offsetX = mouseX * 20 * _aspect;
-        var offsetY = mouseY * 20;
-        _bgStyle.transform = 'translate3d(' + offsetX + 'px,' + offsetY + 'px,0)';
+        _mouseX = (evt.pageX / _winWidth - 0.5) * 2;
+        _mouseY = (evt.pageY / _winHeight - 0.5) * 2;
+
     }
 
     function _animate() {
@@ -144,6 +146,12 @@ var app = (function(exports, undef){
     }
 
     function render() {
+
+        // always put the rendering out of the input event scope
+        var offsetX = _mouseX * 20 * _aspect;
+        var offsetY = _mouseY * 20;
+
+        _bgStyle.transform = 'translate3d(' + offsetX + 'px,' + offsetY + 'px,0)';
 
     }
 

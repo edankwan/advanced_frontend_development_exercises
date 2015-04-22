@@ -1,0 +1,278 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Gun shoot effect</title>
+    <meta name="viewport" content="initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <link href='http://fonts.googleapis.com/css?family=Lato:700|Oswald:400' rel='stylesheet' type='text/css'>
+    <style>
+        html, body {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            margin: 0 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Oswald', sans-serif;
+            color: #fff;
+        }
+        ::selection {
+          background: transparent;
+        }
+        ::-moz-selection {
+          background: transparent;
+        }
+        a {
+            color: #ff5f5f;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="js/dat.gui.js"></script>
+    <script src="js/speakUtils.js"></script>
+    <script src="js/pixi.js"></script>
+    <script src="js/TweenMax.js"></script>
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+
+        precision mediump float;
+
+        varying vec2 vTextureCoord;
+        uniform sampler2D uSampler;
+
+        // new texture sampler2D
+        uniform sampler2D uOverlay;
+
+        uniform float uAnimation;
+        uniform float uScreenEffect;
+        uniform float uShake;
+        uniform float uTime;
+        uniform float uWave;
+        uniform vec2 uGunPoint;
+
+        #define PI 3.1415926535
+
+        float rand(vec2 co){
+            return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+        }
+
+        /**
+         * Overlay shader by @Jam3
+         * https://github.com/Jam3/glsl-blend-overlay
+         **/
+        vec3 blendOverlay(vec3 base, vec3 blend) {
+            return mix(1.0 - 2.0 * (1.0 - base) * (1.0 - blend), 2.0 * base * blend, step(base, vec3(0.5)));
+        }
+
+        void main(void) {
+
+            // https://www.desmos.com/calculator/owgn1vd0mg
+            float shootRatio = sin(pow(uAnimation, 0.5) * PI);
+
+            // get the offset coord value to the gun point
+            vec2 toCenter = vTextureCoord - uGunPoint;
+
+            // get the length and angle of the current fragment to the gun point
+            float d = length(toCenter);
+            float a = atan(toCenter.y, toCenter.x);
+
+            // calculate the wave offset from the distance to the gun point
+            // https://www.desmos.com/calculator/emzvpzst6k
+            float delta = sin((d + (1.0 - uAnimation)) * 20.0) * 0.1 * uWave * shootRatio;
+
+            d += delta;
+
+            // remap the coord value from the angle and adjusted distance
+            vec2 coord = vec2(cos(a), sin(a)) * d + uGunPoint;
+
+            // add random coord offset
+            coord += vec2(
+                rand(vec2(0.1, uTime)),
+                rand(vec2(0.2, uTime))
+            ) * uShake * 0.2 * shootRatio;
+
+            // use the adjusted coord instead
+            vec4 diffuse = texture2D(uSampler, coord);
+            vec4 overlay = texture2D(uOverlay, coord);
+
+            // use mix() which is lerp() in GLSL to interpolate the colors
+            // use the shootRatio
+            vec4 color = mix(diffuse, overlay, shootRatio);
+
+            // add the black and white layers overlay blending
+            // make the contrast higher when shooting by adding the shootRatio
+            color.rgb = blendOverlay(color.rgb, vec3(mix(0.5, 1.0, uScreenEffect + shootRatio)));
+            color.rgb = blendOverlay(color.rgb, vec3(mix(0.5, 0.0, uScreenEffect + shootRatio)));
+
+            // add the fake wave hi/low lighting
+            color.rgb -= delta * pow(5.0, 0.5 + uAnimation);
+
+            // add some static noise
+            color.rgb = blendOverlay(color.rgb, vec3(0.4 + rand(coord + uTime) * 0.2));
+            // color.rgb = vec3(rand(coord + uTime));
+
+            // output the color
+            gl_FragColor = color;
+
+        }
+    </script>
+
+    <script>
+
+        var config = {
+            shoot: function() {
+                TweenMax.fromTo(config, 0.5, {animation: 0}, {animation: 1});
+                resources.shot.currentTime = 0.1;
+                resources.shot.play();
+            },
+            animation: 0,
+            shake: 0.2,
+            screenEffect: 0.4,
+            wave: 0.2
+        };
+
+        var windowWidth;
+        var windowHeight;
+
+        var stats;
+        var resources;
+
+        var renderer;
+        var stage;
+
+        var sprite;
+        var uniforms;
+
+        // assign the fragment shader script text above to the variable fs
+        var fs = document.getElementById('shader-fs').textContent;
+
+        // variable to store the scale ratio
+        var spriteScale;
+
+        var gui;
+
+        var isPreloaded = false;
+
+        function init() {
+            resources.heartbeat.loop = true;
+            resources.heartbeat.play();
+
+            gui = new dat.GUI();
+
+            // add a gui control animation range from 0 to 1
+            gui.add(config, 'animation', 0, 1).listen();
+            gui.add(config, 'screenEffect', 0, 1).listen();
+            gui.add(config, 'wave', 0, 1).listen();
+            gui.add(config, 'shake', 0, 1).listen();
+            gui.add(config, 'shoot');
+
+            renderer = new PIXI.WebGLRenderer(1, 1);
+            stage = stage = new PIXI.Container();
+            document.body.appendChild(renderer.view);
+
+            sprite = new PIXI.Sprite(new PIXI.Texture(new PIXI.BaseTexture(resources.base)));
+
+            // add a new PIXI texture with the overlay image
+            var overlayTexture = new PIXI.Texture(new PIXI.BaseTexture(resources.overlay));
+
+            // assign a custom shader to the sprite
+            sprite.shader = new PIXI.AbstractFilter(null, fs, uniforms = {
+
+                // add the texture to the uniform
+                uOverlay: { type: 'sampler2D', value: overlayTexture },
+
+                // gun point position. x: 1720/1920, y: 434/1080
+                uGunPoint: { type: 'v2', value: new PIXI.Point(0.90625, 0.401851) },
+
+                // add a new uniform for animation
+                uAnimation: { type: '1f', value: 0 },
+
+                // add a new uniform for wave level
+                uWave: { type: '1f', value: 0 },
+
+                // add a new uniform for screenEffect level
+                uShake: { type: '1f', value: 0 },
+
+                // add a new uniform for screenEffect level
+                uTime: { type: '1f', value: 0 },
+
+                // add a new uniform for screenEffect level
+                uScreenEffect: { type: '1f', value: 0 }
+            });
+
+            // set Anchor to the center of the sprite
+            sprite.anchor.set(0.5, 0.5);
+
+            stage.addChild(sprite);
+
+            window.onresize = onResize;
+            onResize();
+
+            loop();
+
+        }
+
+        function onResize() {
+            windowWidth = window.innerWidth;
+            windowHeight = window.innerHeight;
+            renderer.resize(windowWidth, windowHeight);
+
+            // use the "cover scale" as scale ratio
+            spriteScale = Math.max( windowWidth / 1920, windowHeight / 1080);
+
+            // update the sprite scaling
+            sprite.scale.set(spriteScale, spriteScale);
+
+            // set the position(anchor) to the screen center
+            sprite.position.x = windowWidth / 2;
+            sprite.position.y = windowHeight / 2;
+
+            render();
+        }
+
+        function loop() {
+            requestAnimationFrame(loop);
+            render();
+        }
+
+        function render() {
+
+            // assign the animation value in the GUI control to the uniform
+            uniforms.uAnimation.value = config.animation;
+
+            // assign the screenEffect value in the GUI control to the uniform
+            uniforms.uScreenEffect.value = config.screenEffect;
+
+            // assign the wave value in the GUI control to the uniform
+            uniforms.uWave.value = config.wave;
+
+            // assign the wave value in the GUI control to the uniform
+            uniforms.uShake.value = config.shake;
+
+            // adding 0.001 on every rendering
+            uniforms.uTime.value += 0.001;
+
+            renderer.render(stage);
+        }
+
+        function preload() {
+            speakUtils.preload([
+                {id: 'base', url: 'images/gun_base.jpg', type: 'image'},
+                {id: 'overlay', url: 'images/gun_overlay.jpg', type: 'image'},
+                {id: 'heartbeat', url: 'audio/heartbeat.mp3', type: 'audio'},
+                {id: 'shot', url: 'audio/shot.mp3', type: 'audio'}
+            ], function(percent, items) {
+                resources = resources || items.contents;
+                if(percent == 1 && !isPreloaded) {
+                    isPreloaded = true;
+                    init();
+                }
+            });
+        }
+        preload();
+
+    </script>
+</body>
+</html>

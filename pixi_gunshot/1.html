@@ -73,6 +73,9 @@
         var sprite;
         var uniforms;
 
+        // variable to store the scale ratio
+        var spriteScale;
+
         var gui;
 
         var isPreloaded = false;
@@ -87,6 +90,9 @@
 
             sprite = new PIXI.Sprite(new PIXI.Texture(new PIXI.BaseTexture(resources.base)));
 
+            // set Anchor to the center of the sprite
+            sprite.anchor.set(0.5, 0.5);
+
             stage.addChild(sprite);
 
             window.onresize = onResize;
@@ -100,6 +106,16 @@
             windowWidth = window.innerWidth;
             windowHeight = window.innerHeight;
             renderer.resize(windowWidth, windowHeight);
+
+            // use the "cover scale" as scale ratio
+            spriteScale = Math.max( windowWidth / 1920, windowHeight / 1080);
+
+            // update the sprite scaling
+            sprite.scale.set(spriteScale, spriteScale);
+
+            // set the position(anchor) to the screen center
+            sprite.position.x = windowWidth / 2;
+            sprite.position.y = windowHeight / 2;
 
             render();
         }

@@ -42,6 +42,11 @@
         varying vec2 vTextureCoord;
         uniform sampler2D uSampler;
 
+        // new texture sampler2D
+        uniform sampler2D uOverlay;
+
+        uniform float uAnimation;
+
         #define PI 3.1415926535
 
         float rand(vec2 co){
@@ -50,7 +55,15 @@
 
         void main(void) {
 
-            gl_FragColor = texture2D(uSampler, vTextureCoord);
+            // assign the the pixel color values to 2 vec4 variables
+            vec4 diffuse = texture2D(uSampler, vTextureCoord);
+            vec4 overlay = texture2D(uOverlay, vTextureCoord);
+
+            // use mix() which is lerp() in GLSL to interpolate the colors
+            vec4 color = mix(diffuse, overlay, uAnimation);
+
+            // output the color
+            gl_FragColor = color;
 
         }
     </script>
@@ -73,6 +86,12 @@
         var sprite;
         var uniforms;
 
+        // assign the fragment shader script text above to the variable fs
+        var fs = document.getElementById('shader-fs').textContent;
+
+        // variable to store the scale ratio
+        var spriteScale;
+
         var gui;
 
         var isPreloaded = false;
@@ -81,11 +100,30 @@
 
             gui = new dat.GUI();
 
+            // add a gui control animation range from 0 to 1
+            gui.add(config, 'animation', 0, 1).listen();
+
             renderer = new PIXI.WebGLRenderer(1, 1);
             stage = stage = new PIXI.Container();
             document.body.appendChild(renderer.view);
 
             sprite = new PIXI.Sprite(new PIXI.Texture(new PIXI.BaseTexture(resources.base)));
+
+            // add a new PIXI texture with the overlay image
+            var overlayTexture = new PIXI.Texture(new PIXI.BaseTexture(resources.overlay));
+
+            // assign a custom shader to the sprite
+            sprite.shader = new PIXI.AbstractFilter(null, fs, uniforms = {
+
+                // add the texture to the uniform
+                uOverlay: { type: 'sampler2D', value: overlayTexture },
+
+                // add a new uniform for animation
+                uAnimation: { type: '1f', value: 0 }
+            });
+
+            // set Anchor to the center of the sprite
+            sprite.anchor.set(0.5, 0.5);
 
             stage.addChild(sprite);
 
@@ -101,6 +139,16 @@
             windowHeight = window.innerHeight;
             renderer.resize(windowWidth, windowHeight);
 
+            // use the "cover scale" as scale ratio
+            spriteScale = Math.max( windowWidth / 1920, windowHeight / 1080);
+
+            // update the sprite scaling
+            sprite.scale.set(spriteScale, spriteScale);
+
+            // set the position(anchor) to the screen center
+            sprite.position.x = windowWidth / 2;
+            sprite.position.y = windowHeight / 2;
+
             render();
         }
 
@@ -110,6 +158,10 @@
         }
 
         function render() {
+
+            // assign the animation value in the GUI control to the uniform
+            uniforms.uAnimation.value = config.animation;
+
             renderer.render(stage);
         }
 

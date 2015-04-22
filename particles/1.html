@@ -119,6 +119,34 @@
         ctx.fillStyle = '#fff';
         ctx.fillText(str, 0, config.lineHeight * config.fontSize *config.baseLine);
 
+        // create 2 arrays to store the pixel information
+        var vertices = [];
+        var extras = [];
+        var index;
+        var data = ctx.getImageData(0, 0, width, height).data;
+        var count = 0;
+        for(var i = 0, len = data.length; i < len; i+=4) {
+            if(data[i + 3] > 0) {
+                index = i / 4;
+
+                // x value
+                vertices[count * 2] = index % width;
+
+                // y value
+                vertices[count * 2 + 1] = index / width | 0;
+
+                // alpha channel from 0..1
+                extras[count * 2] = data[i + 3] / 255;
+
+                // a random number
+                extras[count * 2 + 1] = Math.random();
+
+                count++;
+            }
+        }
+
+        // display the vertices count information in the title
+        document.title = 'vertices count: ' + count;
     }
 
     function onResize() {
