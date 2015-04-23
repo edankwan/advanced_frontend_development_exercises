@@ -44,7 +44,7 @@ var speakUtils = (function(exports) {
     }
 
     function loadTextFile(url, cb, isBusted, crossOrigin) {
-        if(isBusted === undef ? true : isBusted) url = getBustedUrl(url);
+        if(isBusted === undef ? false : isBusted) url = getBustedUrl(url);
 
         // who cares about old IE :D
         var xmlhttp = new XMLHttpRequest();
@@ -54,7 +54,7 @@ var speakUtils = (function(exports) {
     }
 
     function loadImage(url, cb, isBusted, crossOrigin) {
-        if(isBusted === undef ? true : isBusted) url = getBustedUrl(url);
+        if(isBusted === undef ? false : isBusted) url = getBustedUrl(url);
 
         var img = new Image();
         if(crossOrigin) {
@@ -98,7 +98,7 @@ var speakUtils = (function(exports) {
                     console.error('type missing');
                     break;
             }
-            func(item.url, bind(_onItemLoad, items, onLoading, i), item.isBusted, item.crossOrigin);
+            func(item.url, bind(_onItemLoad, items, onLoading, i), isBusted || item.isBusted, item.crossOrigin);
         }
     }
 
