@@ -31,7 +31,7 @@
             code, .hljs {
                 display: inline-block;
                 min-width: 100%;
-                font-size: 22px;
+                font-size: 18px;
                 outline: none;
                 overflow-wrap: normal;
                 white-space: pre;
@@ -41,7 +41,7 @@
                 width: 100%;
             }
             code > div div {
-                line-height: 30px;
+                line-height: 24px;
                 padding: 0 0 0 25px;
             }
             code.hljs span.css,
@@ -63,7 +63,7 @@
                 top: 0;
                 margin-top: -1px;
                 width: 100%;
-                height: 30px;
+                height: 24px;
                 border-top: 1px solid #666;
                 border-bottom: 1px solid #666;
                 pointer-events: none;
@@ -95,18 +95,14 @@
                 bottom: 0;
                 background-color: #fff;
             }
-            .bottom-timeline {
+            .bottom-timer {
                 position: absolute;
+                bottom: 8px;
                 left: 0;
-                bottom: 0;
-                width: 100%;
-                height: 5px;
-                background-color: #ccc;
-            }
-            .bottom-timeline-current {
-                width: 0%;
-                height: 5px;
-                background-color: #ff8d8d;
+                width: 105px;
+
+                font-size: 14px;
+                text-align: center;
             }
 
             .bottom-preview {
@@ -127,9 +123,9 @@
                 position: absolute;
                 top: 0;
                 left: 125px;
-                right: 200px;
+                width: 300px;
                 height: 100%;
-                font-size: 24px;
+                font-size: 18px;
                 vertical-align: middle;
             }
             .bottom-control {
@@ -197,7 +193,7 @@
                 <div class="bottom-control-section is-up"></div>
                 <div class="bottom-control-section is-down"></div>
             </div>
-            <div class="bottom-timeline"><div class="bottom-timeline-current"></div></div>
+            <div class="bottom-timer">0:00</div>
         </div>
 
         <script src="js/signals.js"></script>
@@ -209,7 +205,7 @@
 
         <script>
 
-            var LINE_HEIGHT = 30;
+            var LINE_HEIGHT = 24;
 
             var undef;
 
@@ -235,6 +231,7 @@
             var rightBtn = document.querySelector('.is-right');
             var upBtn = document.querySelector('.is-up');
             var downBtn = document.querySelector('.is-down');
+            var timer = document.querySelector('.bottom-timer');
             var codeHighlighter = document.createElement('div');
 
             var currentCode;
@@ -242,6 +239,8 @@
             var lastText;
             var isFirstTime = true;
             var mouseY = 0;
+
+            var startTime = + new Date;
 
             function init() {
 
@@ -259,6 +258,7 @@
                 codeHighlighter.className = 'code-highlighter';
 
                 main.addEventListener('mousemove', onMainMouseMove);
+                main.addEventListener('mouseout', onMainMouseOut);
 
                 hasher.changed.add(onHashChange);
                 hasher.initialized.add(function(newHash){
@@ -271,6 +271,10 @@
 
             function onMainMouseMove(evt) {
                 mouseY = evt.clientY;
+            }
+
+            function onMainMouseOut(evt) {
+                mouseY = -999;
             }
 
             function onHashChange(newHash) {
@@ -428,7 +432,12 @@
 
                 var scrollTop = main.scrollTop;
                 var y = ~~((mouseY + scrollTop) / LINE_HEIGHT) * LINE_HEIGHT;
+                var maxY = currentCode.offsetHeight;
+                if(y > maxY) y = maxY - LINE_HEIGHT;
                 codeHighlighter.style.transform = 'translate3d(0,' + y +'px,0)';
+
+                var time = +new Date - startTime;
+                timer.innerHTML = ~~(time/1000/60) + ':' + ((~~(time/1000) % 60)+100).toString().substring(1);
             }
 
             function openPreview() {
