@@ -8,6 +8,7 @@ $ http-server ./
 ````
 
 then you can live demo the following exercises using:
-**Parallax** - http://localhost:8080/live.html?project=parallax
-**Particles** - http://localhost:8080/live.html?project=particles
-**PIXI gunshot effect** - http://localhost:8080/live.html?project=pixi_gunshot
+
+- **Parallax** - http://localhost:8080/live.html?project=parallax
+- **Particles** - http://localhost:8080/live.html?project=particles
+- **PIXI gunshot effect** - http://localhost:8080/live.html?project=pixi_gunshot
